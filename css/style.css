@@ -159,11 +159,11 @@ body {
 /* Round layout */
 .round-layout {
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: 480px 1fr;
   gap: 1.5rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .round-layout { grid-template-columns: 1fr; }
 }
 
@@ -177,21 +177,9 @@ body {
 
 .wheel-wrap {
   position: relative;
-  width: 280px;
-  height: 280px;
-}
-
-.wheel-pointer {
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 16px solid var(--accent);
-  z-index: 5;
+  width: 440px;
+  height: 440px;
+  max-width: 100%;
 }
 
 .wheel-disc {
@@ -201,21 +189,25 @@ body {
   border: 4px solid var(--line);
   box-shadow: 6px 6px 0 var(--accent);
   position: relative;
-  transition: transform 4s cubic-bezier(.12, .67, .2, 1);
+  transition: transform 4.2s cubic-bezier(.12, .67, .2, 1);
+}
+
+.wheel-balls-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
 }
 
 .wheel-ball {
   position: absolute;
-  width: 12px;
-  height: 12px;
-  background: var(--text);
   border-radius: 50%;
-  top: 6px;
-  left: 50%;
-  margin-left: -6px;
+  background: var(--text);
   box-shadow: 0 0 4px #000;
-  transition: transform 4s cubic-bezier(.12, .67, .2, 1);
-  z-index: 4;
+}
+
+.wheel-ball.extra {
+  background: var(--accent);
 }
 
 .wheel-result {
@@ -322,22 +314,41 @@ input[type="range"]::-moz-range-thumb {
 
 .cell.outside.red { background: var(--red); }
 
-.cell .bet-marker {
+.chip-stack {
   position: absolute;
-  bottom: 2px;
-  right: 2px;
-  background: var(--gold);
-  color: #111;
-  font-size: .65rem;
-  font-weight: 700;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   pointer-events: none;
-  box-shadow: 1px 1px 0 #000;
+  z-index: 4;
+}
+
+.chip-stack .chip-layer {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 22px;
+  height: 9px;
+  margin-left: -11px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--gold);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .5);
+}
+
+.chip-stack .chip-layer.alt { background: #c98f1c; }
+
+.chip-stack .chip-amount {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: .62rem;
+  font-weight: 700;
+  color: var(--gold);
+  background: rgba(0, 0, 0, .75);
+  padding: 1px 4px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
 }
 
 .hit-zone {

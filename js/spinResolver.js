@@ -1,18 +1,30 @@
 window.RS = window.RS || {};
 
 RS.SPIN_RESOLVER = {
-  // primaryIndex: the index in state.wheelLayout chosen by the animated ball.
-  resolve(state, primaryIndex) {
+  // How many extra independent balls the player's equipped balls add this spin
+  // (e.g. "Bille Jumelle"). Computed up front so the caller can roll + animate
+  // their landing pockets before resolving bets against them.
+  extraBallCount(state) {
+    return state.ownedBalls.reduce((sum, inst) => {
+      const def = RS.BALLS.byId(inst.id);
+      return sum + (def && def.extraBalls ? def.extraBalls : 0);
+    }, 0);
+  },
+
+  // primaryIndex: the index in state.wheelLayout the primary ball landed on.
+  // extraIndices: indices already rolled (and animated) for any multiball items.
+  resolve(state, primaryIndex, extraIndices) {
     const layout = state.wheelLayout;
     const n = layout.length;
     const primaryPocket = layout[primaryIndex];
+    extraIndices = extraIndices || [];
 
     const balls = state.ownedBalls
       .map((inst) => ({ inst, def: RS.BALLS.byId(inst.id) }))
       .filter((b) => b.def);
 
     let hitIndices = [primaryIndex];
-    const extraResults = [];
+    const extraResults = extraIndices.map((idx) => layout[idx]);
 
     balls.forEach(({ def }) => {
       if (def.neighborSpread) {
@@ -20,13 +32,7 @@ RS.SPIN_RESOLVER = {
       }
     });
 
-    let extraBallCount = 0;
-    balls.forEach(({ def }) => { if (def.extraBalls) extraBallCount += def.extraBalls; });
-    for (let i = 0; i < extraBallCount; i++) {
-      const r = RS.WHEEL.spin(layout);
-      hitIndices.push(r.index);
-      extraResults.push(r.pocket);
-    }
+    extraIndices.forEach((idx) => hitIndices.push(idx));
 
     hitIndices = Array.from(new Set(hitIndices));
 

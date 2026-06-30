@@ -15,7 +15,7 @@ RS.ROUND_SCREEN = (function () {
       grid: document.getElementById('betting-grid'),
       discWrap: document.getElementById('wheel-wrap'),
       disc: document.getElementById('wheel-disc'),
-      ball: document.getElementById('wheel-ball'),
+      ballsLayer: document.getElementById('wheel-balls-layer'),
       result: document.getElementById('wheel-result'),
       chipSlider: document.getElementById('chip-slider'),
       chipSliderValue: document.getElementById('chip-slider-value'),
@@ -108,7 +108,7 @@ RS.ROUND_SCREEN = (function () {
     const s = RS.state;
     if (s.spinsRemaining <= 0) return;
     if (s.chips < selectedChip) return;
-    const key = `${betInfo.type}:${betInfo.numbers.join(',') || betInfo.label}`;
+    const key = RS.GRID.betKey(betInfo.type, betInfo.numbers, betInfo.label);
     let bet = s.currentBets.find((b) => b.key === key);
     if (bet) {
       bet.amount += selectedChip;
@@ -143,13 +143,19 @@ RS.ROUND_SCREEN = (function () {
     els.result.textContent = '';
     RS.GRID.highlightResult(els.grid, -1);
 
-    const { index } = RS.WHEEL.spin(s.wheelLayout);
-    RS.WHEEL.animateSpin(els.disc, els.ball, s.wheelLayout, index, () => onSpinResolved(index));
+    const { index: primaryIndex } = RS.WHEEL.spin(s.wheelLayout);
+    const extraCount = RS.SPIN_RESOLVER.extraBallCount(s);
+    const extraIndices = [];
+    for (let i = 0; i < extraCount; i++) extraIndices.push(RS.WHEEL.spin(s.wheelLayout).index);
+
+    RS.WHEEL.animateSpin(els.disc, els.ballsLayer, s.wheelLayout, primaryIndex, extraIndices, () => {
+      onSpinResolved(primaryIndex, extraIndices);
+    });
   }
 
-  function onSpinResolved(index) {
+  function onSpinResolved(primaryIndex, extraIndices) {
     const s = RS.state;
-    const result = RS.SPIN_RESOLVER.resolve(s, index);
+    const result = RS.SPIN_RESOLVER.resolve(s, primaryIndex, extraIndices);
     const pocket = result.primaryPocket;
 
     els.result.textContent = pocket.number;

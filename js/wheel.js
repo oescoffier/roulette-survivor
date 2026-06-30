@@ -46,7 +46,7 @@ RS.WHEEL = (function () {
     }).join(', ');
     discEl.style.background = `conic-gradient(${stops})`;
 
-    const R = discEl.clientWidth ? discEl.clientWidth / 2 : 140;
+    const R = discEl.clientWidth ? discEl.clientWidth / 2 : 220;
     layout.forEach((p, i) => {
       const center = i * seg + seg / 2;
       const label = document.createElement('div');
@@ -54,11 +54,11 @@ RS.WHEEL = (function () {
       label.style.position = 'absolute';
       label.style.left = '50%';
       label.style.top = '50%';
-      label.style.fontSize = '.6rem';
+      label.style.fontSize = '.72rem';
       label.style.fontFamily = "'Space Mono', monospace";
       label.style.color = '#fff';
       label.style.transformOrigin = '0 0';
-      label.style.transform = `rotate(${center}deg) translate(-50%, ${-(R - 16)}px)`;
+      label.style.transform = `rotate(${center}deg) translate(-50%, ${-(R - 24)}px)`;
       discEl.appendChild(label);
     });
 
@@ -66,32 +66,62 @@ RS.WHEEL = (function () {
     discEl.style.transform = `rotate(${discEl._rotation}deg)`;
   }
 
-  function animateSpin(discEl, ballEl, layout, resultIndex, onDone) {
+  const BALL_SIZE = 14;
+  const RIM_INSET = 12; // px the ball orbits inside the outer rim
+
+  // Animates the wheel disc (purely decorative spin) plus one ball per result
+  // index (primaryIndex first, then any extraIndices from multiball items).
+  // Each ball orbits counter-clockwise - opposite to the disc's clockwise spin -
+  // and lands exactly on its pocket's real position once the disc stops, instead
+  // of every ball converging on a fixed pointer.
+  function animateSpin(discEl, ballsLayerEl, layout, primaryIndex, extraIndices, onDone) {
     const seg = 360 / layout.length;
-    const centerAngle = resultIndex * seg + seg / 2;
+    const R = discEl.clientWidth ? discEl.clientWidth / 2 : 220;
 
     discEl._rotation = discEl._rotation || 0;
-    const currentMod = ((discEl._rotation % 360) + 360) % 360;
-    const target = 360 - centerAngle;
-    let delta = ((target - currentMod) % 360 + 360) % 360;
-    const fullTurns = 6;
-    discEl._rotation += fullTurns * 360 + delta;
+    const discTurns = 5 + Math.random() * 2;
+    discEl._rotation += discTurns * 360;
+    const discFinalMod = ((discEl._rotation % 360) + 360) % 360;
 
-    if (!ballEl._rotation) ballEl._rotation = 0;
-    ballEl.style.transformOrigin = '6px 134px';
-    const ballTurns = 9;
-    const ballCurrentMod = ((ballEl._rotation % 360) + 360) % 360;
-    let ballDelta = ((0 - ballCurrentMod) % 360 + 360) % 360;
-    ballEl._rotation -= ballTurns * 360 + ballDelta;
-
-    discEl.style.transition = 'transform 4s cubic-bezier(.12,.67,.2,1)';
-    ballEl.style.transition = 'transform 4s cubic-bezier(.12,.67,.2,1)';
+    discEl.style.transition = 'transform 4.2s cubic-bezier(.12,.67,.2,1)';
     discEl.style.transform = `rotate(${discEl._rotation}deg)`;
-    ballEl.style.transform = `rotate(${ballEl._rotation}deg)`;
+
+    ballsLayerEl.innerHTML = '';
+    const allIndices = [primaryIndex].concat(extraIndices || []);
+    let maxDuration = 0;
+
+    allIndices.forEach((idx, i) => {
+      const ballEl = document.createElement('div');
+      ballEl.className = 'wheel-ball' + (i === 0 ? '' : ' extra');
+      ballEl.style.width = `${BALL_SIZE}px`;
+      ballEl.style.height = `${BALL_SIZE}px`;
+      ballEl.style.left = '50%';
+      ballEl.style.top = `${RIM_INSET}px`;
+      ballEl.style.marginLeft = `${-BALL_SIZE / 2}px`;
+      ballEl.style.transformOrigin = `${BALL_SIZE / 2}px ${R - RIM_INSET}px`;
+      ballsLayerEl.appendChild(ballEl);
+
+      const pocketBaseAngle = idx * seg + seg / 2;
+      const targetMod = (pocketBaseAngle + discFinalMod) % 360;
+
+      // Counter-clockwise (negative rotation), several loops around the rim
+      // before settling exactly on the pocket's final on-screen position.
+      const turns = 7 + i * 1.4 + Math.random() * 0.8;
+      const deltaToTarget = ((360 - targetMod) % 360 + 360) % 360;
+      const finalRotation = -(turns * 360 + deltaToTarget);
+
+      const duration = 3.6 + i * 0.35;
+      maxDuration = Math.max(maxDuration, duration);
+
+      ballEl.style.transition = `transform ${duration}s cubic-bezier(.1,.6,.15,1)`;
+      // Force layout flush so the transition picks up from rotate(0), then animate.
+      void ballEl.offsetWidth;
+      ballEl.style.transform = `rotate(${finalRotation}deg)`;
+    });
 
     setTimeout(() => {
-      if (onDone) onDone(layout[resultIndex]);
-    }, 4050);
+      if (onDone) onDone();
+    }, maxDuration * 1000 + 150);
   }
 
   return { BASE_ORDER, RED_NUMBERS, colorOf, buildLayout, spin, renderDisc, animateSpin, forceNextIndex };

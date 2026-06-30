@@ -16,6 +16,12 @@ RS.GRID = (function () {
 
   function isRed(n) { return RS.WHEEL.RED_NUMBERS.has(n); }
 
+  // Shared with roundScreen.js so a bet placed on a zone and the DOM element
+  // that should display its chip stack always agree on the same identifier.
+  function betKey(type, numbers, label) {
+    return `${type}:${(numbers && numbers.length) ? numbers.join(',') : label}`;
+  }
+
   function makeCell(label, cls, gridRow, gridCol, span) {
     const el = document.createElement('div');
     el.className = `cell ${cls}`;
@@ -48,6 +54,7 @@ RS.GRID = (function () {
     // Zero
     const zero = makeCell('0', 'zero green', '1 / span 3', 1);
     zero.dataset.number = '0';
+    zero.dataset.betKey = betKey('straight', [0], '0');
     zero.addEventListener('click', () => fire('straight', [0], '0'));
     containerEl.appendChild(zero);
 
@@ -56,6 +63,7 @@ RS.GRID = (function () {
       const p = pos[n];
       const cell = makeCell(String(n), isRed(n) ? 'red' : '', p.row, p.col + 1);
       cell.dataset.number = String(n);
+      cell.dataset.betKey = betKey('straight', [n], String(n));
       cell.addEventListener('click', () => fire('straight', [n], String(n)));
       containerEl.appendChild(cell);
     }
@@ -82,6 +90,7 @@ RS.GRID = (function () {
       const rect = numRect[n];
       const edgeX = zeroRect.x + zeroRect.w;
       const zone = makeOverlay(edgeX - SPLIT_SIZE / 2, rect.y, SPLIT_SIZE, rect.h);
+      zone.dataset.betKey = betKey('split', [0, n], `0/${n}`);
       zone.addEventListener('click', () => fire('split', [0, n], `0/${n}`));
       containerEl.appendChild(zone);
     }
@@ -93,6 +102,7 @@ RS.GRID = (function () {
         const rect = numRect[n1];
         const edgeX = rect.x + rect.w;
         const zone = makeOverlay(edgeX - SPLIT_SIZE / 2, rect.y, SPLIT_SIZE, rect.h);
+        zone.dataset.betKey = betKey('split', [n1, n2], `${n1}/${n2}`);
         zone.addEventListener('click', () => fire('split', [n1, n2], `${n1}/${n2}`));
         containerEl.appendChild(zone);
       }
@@ -105,6 +115,7 @@ RS.GRID = (function () {
         const rect = numRect[n1];
         const edgeY = rect.y + rect.h;
         const zone = makeOverlay(rect.x, edgeY - SPLIT_SIZE / 2, rect.w, SPLIT_SIZE);
+        zone.dataset.betKey = betKey('split', [n1, n2], `${n1}/${n2}`);
         zone.addEventListener('click', () => fire('split', [n1, n2], `${n1}/${n2}`));
         containerEl.appendChild(zone);
       }
@@ -119,6 +130,7 @@ RS.GRID = (function () {
         const vertexX = rect.x + rect.w;
         const vertexY = rect.y + rect.h;
         const zone = makeOverlay(vertexX - CORNER_SIZE / 2, vertexY - CORNER_SIZE / 2, CORNER_SIZE, CORNER_SIZE);
+        zone.dataset.betKey = betKey('corner', [a, b, d, e], `${a}/${b}/${d}/${e}`);
         zone.addEventListener('click', () => fire('corner', [a, b, d, e], `${a}/${b}/${d}/${e}`));
         containerEl.appendChild(zone);
       }
@@ -130,6 +142,7 @@ RS.GRID = (function () {
       const rect = numRect[d];
       const edgeY = rect.y + rect.h;
       const zone = makeOverlay(rect.x + rect.w * 0.15, edgeY - EDGE_SIZE / 2, rect.w * 0.7, EDGE_SIZE);
+      zone.dataset.betKey = betKey('street', [a, b, d], `Rue ${d}-${a}`);
       zone.addEventListener('click', () => fire('street', [a, b, d], `Rue ${d}-${a}`));
       containerEl.appendChild(zone);
     }
@@ -144,6 +157,7 @@ RS.GRID = (function () {
       const edgeX = rect.x + rect.w;
       const edgeY = rect.y + rect.h;
       const zone = makeOverlay(edgeX - CORNER_SIZE / 2, edgeY - EDGE_SIZE / 2, CORNER_SIZE, EDGE_SIZE);
+      zone.dataset.betKey = betKey('sixline', nums, `Sixain ${nums[2]}-${nums[5]}`);
       zone.addEventListener('click', () => fire('sixline', nums, `Sixain ${nums[2]}-${nums[5]}`));
       containerEl.appendChild(zone);
     }
@@ -156,6 +170,7 @@ RS.GRID = (function () {
     ];
     dozens.forEach((d) => {
       const cell = makeCell(d.label, 'outside', 4, d.col, 4);
+      cell.dataset.betKey = betKey('dozen', d.range, d.label);
       cell.addEventListener('click', () => fire('dozen', d.range, d.label));
       containerEl.appendChild(cell);
     });
@@ -165,6 +180,7 @@ RS.GRID = (function () {
       const nums = [];
       for (let c = 1; c <= 12; c++) nums.push(numAt[`${r},${c}`]);
       const cell = makeCell('2 to 1', 'outside', r, 14);
+      cell.dataset.betKey = betKey('column', nums, `Colonne ${r}`);
       cell.addEventListener('click', () => fire('column', nums, `Colonne ${r}`));
       containerEl.appendChild(cell);
     }
@@ -180,22 +196,38 @@ RS.GRID = (function () {
     ];
     outside.forEach((o) => {
       const cell = makeCell(o.label, `outside ${o.type === 'red' ? 'red' : ''}`, 5, o.col, 2);
+      cell.dataset.betKey = betKey(o.type, [], o.label);
       cell.addEventListener('click', () => fire(o.type, [], o.label));
       containerEl.appendChild(cell);
     });
   }
 
+  // Builds a small stacked-chips visual (layers + amount label) centred on
+  // whatever cell/hit-zone carries this bet's data-bet-key.
   function updateMarkers(containerEl, bets) {
-    containerEl.querySelectorAll('.bet-marker').forEach((m) => m.remove());
+    containerEl.querySelectorAll('.chip-stack').forEach((m) => m.remove());
     bets.forEach((bet) => {
-      if (bet.type !== 'straight') return;
-      const n = bet.numbers[0];
-      const cellEl = containerEl.querySelector(`.cell[data-number="${n}"]`);
-      if (!cellEl) return;
-      const marker = document.createElement('div');
-      marker.className = 'bet-marker';
-      marker.textContent = bet.amount;
-      cellEl.appendChild(marker);
+      const targetEl = containerEl.querySelector(`[data-bet-key="${bet.key}"]`);
+      if (!targetEl) return;
+
+      const stack = document.createElement('div');
+      stack.className = 'chip-stack';
+
+      const layerCount = Math.min(6, Math.max(1, Math.ceil(bet.amount / 15)));
+      for (let i = 0; i < layerCount; i++) {
+        const layer = document.createElement('div');
+        layer.className = 'chip-layer' + (i % 2 === 1 ? ' alt' : '');
+        layer.style.bottom = `${i * 5}px`;
+        stack.appendChild(layer);
+      }
+
+      const amount = document.createElement('div');
+      amount.className = 'chip-amount';
+      amount.textContent = bet.amount;
+      amount.style.bottom = `${layerCount * 5 + 8}px`;
+      stack.appendChild(amount);
+
+      targetEl.appendChild(stack);
     });
   }
 
@@ -205,5 +237,5 @@ RS.GRID = (function () {
     if (cellEl) cellEl.classList.add('win');
   }
 
-  return { pos, numAt, isRed, render, updateMarkers, highlightResult };
+  return { pos, numAt, isRed, betKey, render, updateMarkers, highlightResult };
 })();
