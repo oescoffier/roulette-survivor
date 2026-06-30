@@ -248,7 +248,11 @@ RS.GRID = (function () {
         const layer = document.createElement('div');
         layer.className = 'chip-layer';
         layer.style.bottom = `${i * 5}px`;
-        layer.style.background = denom.color;
+        // Edge-spot ring (classic poker chip pattern) under a soft glossy
+        // highlight, instead of a flat-colored disc.
+        layer.style.background =
+          'radial-gradient(circle at 50% 22%, rgba(255,255,255,.55), transparent 55%), ' +
+          `repeating-conic-gradient(from 0deg, ${denom.color} 0deg 24deg, #fff 24deg 28deg)`;
         // Same-denomination chips stacked back to back get a brightness
         // nudge so the layers stay visually distinct from one another.
         if (i % 2 === 1) layer.style.filter = 'brightness(0.82)';
