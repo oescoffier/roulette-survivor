@@ -15,9 +15,11 @@ RS.CONFIG = {
     return Math.round(300 * Math.pow(1.35, round - 1));
   },
 
-  // $ earned when a round is cleared
+  // $ earned when a round is cleared. Average shop item costs ~7$, so the base
+  // alone covers about 2 items per visit; the bonus is upside for beating the
+  // threshold by a wide margin.
   moneyReward(round, finalChips, threshold) {
-    const base = 3 + Math.floor(round / 2);
+    const base = 14 + Math.floor(round / 2);
     const bonus = Math.floor(Math.max(0, finalChips - threshold) / 15);
     return base + bonus;
   },
