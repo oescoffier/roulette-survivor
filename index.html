@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roulette Survivor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="grain"></div>
+  <div id="app" class="page">
+
+    <!-- MENU -->
+    <section id="screen-menu" class="screen">
+      <div class="panel hero-panel">
+        <h1 class="title-xl">ROULETTE<br>SURVIVOR</h1>
+        <p class="muted">Mise tes jetons. Lance la bille. Survis aux manches.</p>
+        <div class="btn-row">
+          <button id="btn-new-game" class="btn btn-accent">NOUVELLE PARTIE</button>
+          <button id="btn-continue-game" class="btn" style="display:none">CONTINUER</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROUND -->
+    <section id="screen-round" class="screen" style="display:none">
+      <div class="panel topbar">
+        <div class="stat">
+          <span class="stat-label">MANCHE</span>
+          <span id="stat-round" class="stat-value">1</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">SEUIL</span>
+          <span id="stat-threshold" class="stat-value">300</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">JETONS</span>
+          <span id="stat-chips" class="stat-value chips-value">100</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">LANCERS</span>
+          <span id="stat-spins" class="stat-value">3</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">$</span>
+          <span id="stat-money" class="stat-value money-value">0</span>
+        </div>
+      </div>
+
+      <div class="round-layout">
+        <div class="panel wheel-panel">
+          <div id="wheel-wrap" class="wheel-wrap">
+            <div id="wheel-pointer" class="wheel-pointer"></div>
+            <div id="wheel-disc" class="wheel-disc"></div>
+            <div id="wheel-ball" class="wheel-ball"></div>
+            <div id="wheel-result" class="wheel-result"></div>
+          </div>
+          <div class="chip-rack" id="chip-rack">
+            <button class="chip" data-value="1">1</button>
+            <button class="chip" data-value="5">5</button>
+            <button class="chip" data-value="10">10</button>
+            <button class="chip" data-value="25">25</button>
+            <button class="chip" data-value="50">50</button>
+          </div>
+          <div class="active-items" id="active-balls"></div>
+          <div class="active-items" id="active-wheel-mods"></div>
+        </div>
+
+        <div class="panel grid-panel">
+          <div id="betting-grid" class="betting-grid"></div>
+          <div class="grid-actions">
+            <div class="wagered-info">
+              <span class="muted">MISE TOTALE :</span>
+              <span id="stat-wagered" class="stat-value">0</span>
+            </div>
+            <button id="btn-clear-bets" class="btn btn-small">EFFACER</button>
+            <button id="btn-spin" class="btn btn-accent btn-spin">LANCER LA BILLE</button>
+          </div>
+          <div class="active-items" id="active-grid-mods"></div>
+        </div>
+      </div>
+
+      <div id="spin-log" class="panel spin-log"></div>
+    </section>
+
+    <!-- SHOP -->
+    <section id="screen-shop" class="screen" style="display:none">
+      <div class="panel topbar">
+        <h2 class="title-lg">BOUTIQUE</h2>
+        <div class="stat">
+          <span class="stat-label">$</span>
+          <span id="shop-money" class="stat-value money-value">0</span>
+        </div>
+      </div>
+      <div id="shop-offers" class="shop-offers"></div>
+      <div class="btn-row">
+        <button id="btn-leave-shop" class="btn btn-accent">MANCHE SUIVANTE</button>
+      </div>
+    </section>
+
+    <!-- GAME OVER -->
+    <section id="screen-gameover" class="screen" style="display:none">
+      <div class="panel hero-panel">
+        <h1 class="title-xl">GAME OVER</h1>
+        <p id="gameover-stats" class="muted"></p>
+        <div class="btn-row">
+          <button id="btn-restart" class="btn btn-accent">NOUVELLE PARTIE</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/wheel.js"></script>
+  <script src="js/bettingGrid.js"></script>
+  <script src="js/payouts.js"></script>
+  <script src="js/items/balls.js"></script>
+  <script src="js/items/gridMods.js"></script>
+  <script src="js/items/wheelMods.js"></script>
+  <script src="js/spinResolver.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/screens/menuScreen.js"></script>
+  <script src="js/screens/roundScreen.js"></script>
+  <script src="js/screens/shopScreen.js"></script>
+  <script src="js/screens/gameOverScreen.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
