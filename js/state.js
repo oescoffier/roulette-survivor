@@ -19,6 +19,7 @@ RS.state = {
   newGame() {
     this.round = 1;
     this.money = 0;
+    this.chips = RS.CONFIG.startingChips;
     this.ownedBalls = [];
     this.ownedGridMods = [];
     this.ownedWheelMods = [];
@@ -29,9 +30,11 @@ RS.state = {
     this.save();
   },
 
+  // Resets per-round state (threshold, spins, bets, log). Chips are NOT reset
+  // here - they carry over from the previous round, so the player keeps
+  // whatever they scored above the threshold and builds on it round to round.
   startRound() {
     this.threshold = RS.CONFIG.threshold(this.round);
-    this.chips = RS.CONFIG.startingChips(this.round);
     this.spinsRemaining = RS.CONFIG.spinsPerRound;
     this.currentBets = [];
     this.log = [];

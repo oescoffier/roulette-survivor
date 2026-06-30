@@ -9,9 +9,7 @@ RS.CONFIG = {
 
   shopOfferCounts: { balls: 2, gridMods: 2, wheelMods: 2 },
 
-  startingChips(round) {
-    return 100 + (round - 1) * 25;
-  },
+  startingChips: 100,
 
   threshold(round) {
     return Math.round(300 * Math.pow(1.35, round - 1));
