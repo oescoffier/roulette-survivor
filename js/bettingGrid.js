@@ -213,7 +213,9 @@ RS.GRID = (function () {
       const stack = document.createElement('div');
       stack.className = 'chip-stack';
 
-      const layerCount = Math.min(6, Math.max(1, Math.ceil(bet.amount / 15)));
+      // No cap on purpose: a big bet should pile up into a huge, absurd, hard
+      // to read tower of chips - 100 jetons = 2 layers, scaling unbounded.
+      const layerCount = Math.max(1, Math.ceil(bet.amount / 50));
       for (let i = 0; i < layerCount; i++) {
         const layer = document.createElement('div');
         layer.className = 'chip-layer' + (i % 2 === 1 ? ' alt' : '');
