@@ -74,6 +74,8 @@ RS.WHEEL = (function () {
   // Each ball orbits counter-clockwise - opposite to the disc's clockwise spin -
   // and lands exactly on its pocket's real position once the disc stops, instead
   // of every ball converging on a fixed pointer.
+  const DISC_DURATION = 4.2; // seconds
+
   function animateSpin(discEl, ballsLayerEl, layout, primaryIndex, extraIndices, onDone) {
     const seg = 360 / layout.length;
     const R = discEl.clientWidth ? discEl.clientWidth / 2 : 220;
@@ -83,12 +85,15 @@ RS.WHEEL = (function () {
     discEl._rotation += discTurns * 360;
     const discFinalMod = ((discEl._rotation % 360) + 360) % 360;
 
-    discEl.style.transition = 'transform 4.2s cubic-bezier(.12,.67,.2,1)';
+    discEl.style.transition = `transform ${DISC_DURATION}s cubic-bezier(.12,.67,.2,1)`;
     discEl.style.transform = `rotate(${discEl._rotation}deg)`;
 
     ballsLayerEl.innerHTML = '';
     const allIndices = [primaryIndex].concat(extraIndices || []);
-    let maxDuration = 0;
+    // Every ball must settle at or after the disc does - its landing angle is
+    // computed against the disc's FINAL resting orientation, so finishing
+    // earlier would have it land where the pocket will be, not where it is yet.
+    let maxDuration = DISC_DURATION;
 
     allIndices.forEach((idx, i) => {
       const ballEl = document.createElement('div');
@@ -104,13 +109,15 @@ RS.WHEEL = (function () {
       const pocketBaseAngle = idx * seg + seg / 2;
       const targetMod = (pocketBaseAngle + discFinalMod) % 360;
 
-      // Counter-clockwise (negative rotation), several loops around the rim
-      // before settling exactly on the pocket's final on-screen position.
-      const turns = 7 + i * 1.4 + Math.random() * 0.8;
+      // Counter-clockwise (negative rotation), several whole loops around the
+      // rim before settling exactly on the pocket's final on-screen position.
+      // `turns` MUST be an integer - a fractional loop count would add leftover
+      // degrees on top of deltaToTarget and throw off the landing angle.
+      const turns = 7 + i * 2 + Math.floor(Math.random() * 2);
       const deltaToTarget = ((360 - targetMod) % 360 + 360) % 360;
       const finalRotation = -(turns * 360 + deltaToTarget);
 
-      const duration = 3.6 + i * 0.35;
+      const duration = DISC_DURATION + i * 0.35;
       maxDuration = Math.max(maxDuration, duration);
 
       ballEl.style.transition = `transform ${duration}s cubic-bezier(.1,.6,.15,1)`;
