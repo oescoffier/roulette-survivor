@@ -332,11 +332,8 @@ input[type="range"]::-moz-range-thumb {
   margin-left: -11px;
   border-radius: 50%;
   border: 2px solid var(--line);
-  background: var(--gold);
   box-shadow: 0 2px 0 rgba(0, 0, 0, .5);
 }
-
-.chip-stack .chip-layer.alt { background: #c98f1c; }
 
 .chip-stack .chip-amount {
   position: absolute;

@@ -22,6 +22,36 @@ RS.GRID = (function () {
     return `${type}:${(numbers && numbers.length) ? numbers.join(',') : label}`;
   }
 
+  // Casino-style chip denominations (biggest first) used to build a stack's
+  // visual layers. Mixing colors keeps a big bet readable at a glance (a
+  // purple chip on top reads as "huge") without needing dozens of identical
+  // layers - capped so even an absurd bet stays a bounded, if messy, tower.
+  const CHIP_DENOMINATIONS = [
+    { value: 5000, color: '#ff6a00' },
+    { value: 1000, color: '#9b30ff' },
+    { value: 500, color: '#0d67ff' },
+    { value: 100, color: '#f2c14e' },
+    { value: 25, color: '#0c8a3e' },
+    { value: 10, color: '#c98f1c' },
+    { value: 5, color: '#d6303f' },
+    { value: 1, color: '#f4f4f4' }
+  ];
+  const MAX_VISUAL_CHIPS = 14;
+
+  function decomposeChips(amount) {
+    const layers = [];
+    let remaining = amount;
+    for (const denom of CHIP_DENOMINATIONS) {
+      while (remaining >= denom.value && layers.length < MAX_VISUAL_CHIPS) {
+        layers.push(denom);
+        remaining -= denom.value;
+      }
+      if (layers.length >= MAX_VISUAL_CHIPS) break;
+    }
+    if (layers.length === 0) layers.push(CHIP_DENOMINATIONS[CHIP_DENOMINATIONS.length - 1]);
+    return layers;
+  }
+
   function makeCell(label, cls, gridRow, gridCol, span) {
     const el = document.createElement('div');
     el.className = `cell ${cls}`;
@@ -213,20 +243,22 @@ RS.GRID = (function () {
       const stack = document.createElement('div');
       stack.className = 'chip-stack';
 
-      // No cap on purpose: a big bet should pile up into a huge, absurd, hard
-      // to read tower of chips - 100 jetons = 2 layers, scaling unbounded.
-      const layerCount = Math.max(1, Math.ceil(bet.amount / 50));
-      for (let i = 0; i < layerCount; i++) {
+      const chipLayers = decomposeChips(bet.amount);
+      chipLayers.forEach((denom, i) => {
         const layer = document.createElement('div');
-        layer.className = 'chip-layer' + (i % 2 === 1 ? ' alt' : '');
+        layer.className = 'chip-layer';
         layer.style.bottom = `${i * 5}px`;
+        layer.style.background = denom.color;
+        // Same-denomination chips stacked back to back get a brightness
+        // nudge so the layers stay visually distinct from one another.
+        if (i % 2 === 1) layer.style.filter = 'brightness(0.82)';
         stack.appendChild(layer);
-      }
+      });
 
       const amount = document.createElement('div');
       amount.className = 'chip-amount';
       amount.textContent = bet.amount;
-      amount.style.bottom = `${layerCount * 5 + 8}px`;
+      amount.style.bottom = `${chipLayers.length * 5 + 8}px`;
       stack.appendChild(amount);
 
       targetEl.appendChild(stack);
