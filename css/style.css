@@ -229,27 +229,55 @@ body {
   pointer-events: none;
 }
 
-.chip-rack {
+.chip-slider-wrap {
+  width: 100%;
   display: flex;
-  gap: .6rem;
+  align-items: center;
+  gap: .75rem;
 }
 
-.chip {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  border: 3px dashed var(--line);
+.chip-slider-wrap label { flex-shrink: 0; }
+
+.chip-slider-wrap #chip-slider-value {
+  min-width: 3.5ch;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+input[type="range"] {
+  flex-grow: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 10px;
   background: var(--surface-2);
-  color: var(--text);
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1rem;
+  border: 2px solid var(--line);
   cursor: pointer;
 }
 
-.chip.selected {
+input[type="range"]:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 26px;
   background: var(--gold);
-  color: #111;
-  border-style: solid;
+  border: 3px solid var(--line);
+  box-shadow: 3px 3px 0 var(--accent);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 26px;
+  background: var(--gold);
+  border: 3px solid var(--line);
+  box-shadow: 3px 3px 0 var(--accent);
+  cursor: pointer;
+  border-radius: 0;
 }
 
 /* Betting grid */

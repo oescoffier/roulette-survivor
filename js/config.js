@@ -2,7 +2,6 @@ window.RS = window.RS || {};
 
 RS.CONFIG = {
   spinsPerRound: 3,
-  chipDenominations: [1, 5, 10, 25, 50],
 
   ballSlotsMax: 3,
   gridModSlotsMax: 3,

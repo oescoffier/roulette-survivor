@@ -1,7 +1,7 @@
 window.RS = window.RS || {};
 
 RS.ROUND_SCREEN = (function () {
-  let selectedChip = RS.CONFIG ? RS.CONFIG.chipDenominations[0] : 1;
+  let selectedChip = 1;
   let els = null;
 
   function cacheEls() {
@@ -17,7 +17,8 @@ RS.ROUND_SCREEN = (function () {
       disc: document.getElementById('wheel-disc'),
       ball: document.getElementById('wheel-ball'),
       result: document.getElementById('wheel-result'),
-      chipRack: document.getElementById('chip-rack'),
+      chipSlider: document.getElementById('chip-slider'),
+      chipSliderValue: document.getElementById('chip-slider-value'),
       btnSpin: document.getElementById('btn-spin'),
       btnClear: document.getElementById('btn-clear-bets'),
       log: document.getElementById('spin-log'),
@@ -25,6 +26,19 @@ RS.ROUND_SCREEN = (function () {
       activeGridMods: document.getElementById('active-grid-mods'),
       activeWheelMods: document.getElementById('active-wheel-mods')
     };
+  }
+
+  // Keeps the bet-size slider's range matched to the player's current chip count.
+  function updateChipSlider() {
+    const s = RS.state;
+    const max = Math.max(1, Math.floor(s.chips));
+    els.chipSlider.min = 1;
+    els.chipSlider.max = max;
+    els.chipSlider.disabled = s.chips < 1;
+    if (selectedChip > max) selectedChip = max;
+    if (selectedChip < 1) selectedChip = 1;
+    els.chipSlider.value = selectedChip;
+    els.chipSliderValue.textContent = selectedChip;
   }
 
   function updateTopbar() {
@@ -36,6 +50,7 @@ RS.ROUND_SCREEN = (function () {
     els.money.textContent = RS.UI.fmt(s.money);
     const wagered = s.currentBets.reduce((sum, b) => sum + b.amount, 0);
     els.wagered.textContent = wagered;
+    updateChipSlider();
   }
 
   function renderActiveItems() {
@@ -83,7 +98,7 @@ RS.ROUND_SCREEN = (function () {
   }
 
   function setBettingEnabled(enabled) {
-    els.chipRack.querySelectorAll('.chip').forEach((c) => { c.disabled = !enabled; });
+    els.chipSlider.disabled = !enabled || RS.state.chips < 1;
     els.btnClear.disabled = !enabled;
     els.grid.style.pointerEvents = enabled ? '' : 'none';
     els.grid.style.opacity = enabled ? '1' : '.55';
@@ -197,21 +212,17 @@ RS.ROUND_SCREEN = (function () {
 
   function enter() {
     if (!els) cacheEls();
-    selectedChip = RS.CONFIG.chipDenominations[0];
+    selectedChip = 1;
 
     RS.GRID.render(els.grid, placeBet);
     RS.WHEEL.renderDisc(els.disc, RS.state.wheelLayout);
     els.result.textContent = '';
     els.log.innerHTML = '';
 
-    els.chipRack.querySelectorAll('.chip').forEach((c) => {
-      c.classList.toggle('selected', Number(c.dataset.value) === selectedChip);
-      c.onclick = () => {
-        selectedChip = Number(c.dataset.value);
-        els.chipRack.querySelectorAll('.chip').forEach((x) => x.classList.remove('selected'));
-        c.classList.add('selected');
-      };
-    });
+    els.chipSlider.oninput = () => {
+      selectedChip = Number(els.chipSlider.value);
+      els.chipSliderValue.textContent = selectedChip;
+    };
 
     els.btnClear.onclick = clearBets;
     resetSpinButton();
