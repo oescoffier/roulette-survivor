@@ -1,7 +1,7 @@
 :root {
-  --bg: #0a0a0a;
+  --bg: #090909;
   --surface: #141414;
-  --surface-2: #1b1b1b;
+  --surface-2: #1f1f1f;
   --text: #f4f4f4;
   --muted: #b8b8b8;
   --line: #f4f4f4;
@@ -9,8 +9,8 @@
   --red: #d6303f;
   --black-num: #1c1c1c;
   --felt: #0c8a3e;
-  --gold: #f2c14e;
-  --shadow: 8px 8px 0 var(--accent);
+  --gold: #f0d24b;
+  --shadow: 6px 6px 0 var(--accent);
 }
 
 * { box-sizing: border-box; }
@@ -28,10 +28,10 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: .13;
-  background-image: radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0);
-  background-size: 16px 16px;
-  mix-blend-mode: soft-light;
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 18px 18px;
 }
 
 .page {
@@ -79,9 +79,10 @@ body {
 
 .btn {
   font-family: 'Space Mono', monospace;
-  font-weight: 700;
+  font-weight: 900;
   font-size: 1rem;
-  letter-spacing: .03em;
+  letter-spacing: .07em;
+  text-transform: uppercase;
   border: 3px solid var(--line);
   background: var(--surface-2);
   color: var(--text);
@@ -138,7 +139,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 70px;
+  min-width: 80px;
+  padding: .4rem .7rem;
+  border: 1px solid rgba(244,244,244,.18);
+  background: rgba(20,20,20,.72);
 }
 
 .stat-label {
@@ -482,6 +486,12 @@ input[type="range"]::-moz-range-thumb {
   font-size: .75rem;
   box-shadow: 2px 2px 0 var(--accent);
   cursor: default;
+  transition: background .1s ease, border-color .1s ease;
+}
+
+.item-badge:hover {
+  background: var(--surface);
+  border-color: var(--accent);
 }
 
 .game-tooltip {
@@ -553,6 +563,6 @@ input[type="range"]::-moz-range-thumb {
 
 .shop-card .price {
   font-family: 'Bebas Neue', sans-serif;
-  color: var(--felt);
+  color: var(--gold);
   font-size: 1.2rem;
 }
