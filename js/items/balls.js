@@ -1,72 +1,78 @@
 window.RS = window.RS || {};
 
-// Balls are passive equipment (slots limited by RS.CONFIG.ballSlotsMax).
-// Each definition may expose:
-//   extraBalls:      int   - additional independent results rolled per "lancer"
-//   neighborSpread:  bool  - the result also activates the two adjacent wheel pockets (±1)
-//   wideSpread:      int   - activates N pockets on each side (±N) around landing
-//   ricochet:        bool  - also activates the pocket directly opposite on the wheel
-//   flatBonusPerWin: int   - flat chips added to every winning bet resolution
-//   maxUses:         int   - ball is consumed and removed after this many spins
-//   lossRefundPct:   float - fraction of total wagered refunded if the spin wins nothing
-//   payoutMultiplier:float - multiplies winnings (not stake) on every winning bet
+// Each ball bought is a physical ball launched into the wheel during a spin.
+// The player always has 1 primary ball (free). Every purchased ball adds a
+// second (or third…) ball that lands independently.
+//
+// Per-ball properties:
+//   spread:          int  — also activates N pockets on each side of landing (0 = single pocket)
+//   mirrorPrimary:   bool — always lands at the pocket directly opposite the primary ball
+//   flatBonusPerWin: int  — flat chips bonus added each time a winning bet is hit by THIS ball
+//   payoutMultiplier:float— winnings multiplier for bets won by THIS ball
+//   maxUses:         int  — ball is consumed after this many spins
+//   lossRefundPct:   float— fraction of total wagered refunded when ALL balls lose everything
 RS.BALLS = (function () {
   const list = [
     {
       id: 'twin',
       name: 'Bille Jumelle',
-      description: '2 billes sont lancées à chaque lancer. Chaque bille est résolue indépendamment.',
-      price: 7,
-      extraBalls: 1
+      description: 'Lance une 2ème bille identique à la bille principale. Double vos chances.',
+      price: 5,
+      spread: 0
     },
     {
       id: 'neighbor',
       name: 'Bille Voisine',
-      description: 'En plus de la case gagnante, les 2 cases voisines sur la roue sont aussi activées.',
+      description: 'Lance une bille qui active aussi les 2 cases voisines sur la roue (3 poches en tout).',
       price: 6,
-      neighborSpread: true
+      spread: 1
+    },
+    {
+      id: 'pulsar',
+      name: 'Bille Pulsar',
+      description: 'Lance une bille qui active les 4 cases voisines (±2) en plus de sa case d\'atterrissage.',
+      price: 9,
+      spread: 2
+    },
+    {
+      id: 'mirror',
+      name: 'Bille Miroir',
+      description: 'Lance une bille qui atterrit toujours à l\'opposé de la bille principale sur la roue.',
+      price: 7,
+      mirrorPrimary: true,
+      spread: 0
     },
     {
       id: 'loaded',
       name: 'Bille Chargée',
-      description: '+20 jetons bonus sur chaque mise gagnante.',
-      price: 6,
-      flatBonusPerWin: 20
+      description: 'Lance une bille qui ajoute +25 jetons à chaque mise gagnante qu\'elle touche.',
+      price: 7,
+      spread: 0,
+      flatBonusPerWin: 25
     },
     {
       id: 'worn',
       name: 'Bille Usée',
-      description: '+50% de gains sur toutes les mises gagnantes, mais se brise après 3 lancers.',
+      description: 'Lance une bille qui paie ×1.5 les gains. Se brise après 3 lancers.',
       price: 5,
+      spread: 0,
       payoutMultiplier: 1.5,
       maxUses: 3
     },
     {
       id: 'ghost',
       name: 'Bille Fantôme',
-      description: 'Si un lancer ne rapporte rien, 50% des jetons misés sont remboursés.',
+      description: 'Lance une bille fantôme. Si aucune bille ne rapporte rien ce lancer, 50% des mises sont remboursées.',
       price: 6,
+      spread: 0,
       lossRefundPct: 0.5
-    },
-    {
-      id: 'pulsar',
-      name: 'Bille Pulsar',
-      description: 'Active les 4 cases voisines (±2) autour de la case touchée. Couvre 5 poches au total.',
-      price: 9,
-      wideSpread: 2
-    },
-    {
-      id: 'mirror',
-      name: 'Bille Miroir',
-      description: 'La bille rebondit sur la poche opposée de la roue — deux zones résolues en un lancer.',
-      price: 7,
-      ricochet: true
     },
     {
       id: 'golden',
       name: 'Bille Dorée',
-      description: '×2 sur les gains de chaque mise gagnante. Se brise après 2 lancers.',
+      description: 'Lance une bille dorée qui paie ×2 les gains. Se brise après 2 lancers.',
       price: 9,
+      spread: 0,
       payoutMultiplier: 2.0,
       maxUses: 2
     }

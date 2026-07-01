@@ -181,9 +181,9 @@ RS.ROUND_SCREEN = (function () {
     RS.GRID.highlightResult(els.grid, -1);
 
     const { index: primaryIndex } = RS.WHEEL.spin(s.wheelLayout);
-    const extraCount = RS.SPIN_RESOLVER.extraBallCount(s);
-    const extraIndices = [];
-    for (let i = 0; i < extraCount; i++) extraIndices.push(RS.WHEEL.spin(s.wheelLayout).index);
+    // Each owned ball gets its own independent landing index (mirror balls are
+    // computed from primaryIndex, others are freshly rolled).
+    const ownedBallIndices = RS.SPIN_RESOLVER.rollOwnedBallIndices(s, primaryIndex);
 
     // Fog event: hide wheel until ball stops
     const isFog = s.currentEvent && s.currentEvent.id === 'fog';
@@ -194,20 +194,25 @@ RS.ROUND_SCREEN = (function () {
       els.result.style.color = 'var(--muted)';
     }
 
-    RS.WHEEL.animateSpin(els.disc, els.ballsLayer, s.wheelLayout, primaryIndex, extraIndices, () => {
+    RS.WHEEL.animateSpin(els.disc, els.ballsLayer, s.wheelLayout, primaryIndex, ownedBallIndices, () => {
       if (isFog) {
         els.disc.classList.remove('fogged');
         els.ballsLayer.classList.remove('fogged');
         els.result.textContent = '';
       }
-      onSpinResolved(primaryIndex, extraIndices);
+      onSpinResolved(primaryIndex, ownedBallIndices);
     });
   }
 
-  function onSpinResolved(primaryIndex, extraIndices) {
+  function onSpinResolved(primaryIndex, ownedBallIndices) {
     const s = RS.state;
     const chipsBefore = s.chips;
-    const result = RS.SPIN_RESOLVER.resolve(s, primaryIndex, extraIndices);
+    // Capture ball names before resolve() may remove expired balls
+    const ownedBallNames = s.ownedBalls.map((inst) => {
+      const def = RS.BALLS.byId(inst.id);
+      return def ? def.name : 'Bille bonus';
+    });
+    const result = RS.SPIN_RESOLVER.resolve(s, primaryIndex, ownedBallIndices);
     const pocket = result.primaryPocket;
     const chipsGained = s.chips - chipsBefore;
 
@@ -215,10 +220,10 @@ RS.ROUND_SCREEN = (function () {
     els.result.style.color = pocket.color === 'red' ? 'var(--red)' : (pocket.color === 'green' ? 'var(--felt)' : '#fff');
     RS.GRID.highlightResult(els.grid, pocket.number);
 
-    logLine(`Résultat : ${pocket.number} (${pocket.color})`, '');
-    if (result.extraResults.length) {
-      logLine(`Billes bonus : ${result.extraResults.map((p) => p.number).join(', ')}`, '');
-    }
+    logLine(`Bille principale : ${pocket.number} (${pocket.color})`, '');
+    result.extraResults.forEach((p, i) => {
+      logLine(`${ownedBallNames[i] || 'Bille bonus'} : ${p.number} (${p.color})`, '');
+    });
     result.betResults.forEach((br) => {
       if (br.win) {
         logLine(`Gagné — ${br.bet.label} : +${RS.UI.fmt(br.payout)} jetons`, 'win');
