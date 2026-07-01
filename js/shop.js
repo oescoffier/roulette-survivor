@@ -12,22 +12,23 @@ RS.SHOP = (function () {
     return a;
   }
 
+  // Generates a fresh set of offers. No slot caps, duplicates allowed —
+  // every item can be purchased multiple times and effects stack.
   function generateOffers(state) {
+    const round = state.round;
     const offers = [];
     const pools = [
-      { category: 'balls', list: RS.BALLS.list, owned: state.ownedBalls, max: RS.CONFIG.ballSlotsMax, count: RS.CONFIG.shopOfferCounts.balls, label: 'BILLE' },
-      { category: 'gridMods', list: RS.GRID_MODS.list, owned: state.ownedGridMods, max: RS.CONFIG.gridModSlotsMax, count: RS.CONFIG.shopOfferCounts.gridMods, label: 'GRILLE' },
-      { category: 'wheelMods', list: RS.WHEEL_MODS.list, owned: state.ownedWheelMods, max: RS.CONFIG.wheelModSlotsMax, count: RS.CONFIG.shopOfferCounts.wheelMods, label: 'ROUE' }
+      { category: 'balls',     list: RS.BALLS.list,      count: RS.CONFIG.shopOfferCounts.balls,     label: 'BILLE' },
+      { category: 'gridMods',  list: RS.GRID_MODS.list,  count: RS.CONFIG.shopOfferCounts.gridMods,  label: 'GRILLE' },
+      { category: 'wheelMods', list: RS.WHEEL_MODS.list, count: RS.CONFIG.shopOfferCounts.wheelMods, label: 'ROUE' }
     ];
 
     pools.forEach((pool) => {
-      if (pool.owned.length >= pool.max) return;
-      const ownedIds = new Set(pool.owned.map((o) => o.id));
-      const available = pool.list.filter((d) => !ownedIds.has(d.id));
-      const picks = shuffle(available).slice(0, pool.count);
+      const picks = shuffle(pool.list).slice(0, pool.count);
       picks.forEach((def) => {
         const params = def.paramsFactory ? def.paramsFactory() : undefined;
-        offers.push({ category: pool.category, label: pool.label, def, params, sold: false });
+        const price = RS.CONFIG.shopItemPrice(def.price, round);
+        offers.push({ category: pool.category, label: pool.label, def, params, price, sold: false });
       });
     });
 
@@ -41,14 +42,14 @@ RS.SHOP = (function () {
   }
 
   function buy(state, offer) {
-    if (offer.sold || state.money < offer.def.price) return false;
-    state.money -= offer.def.price;
+    if (offer.sold || state.money < offer.price) return false;
+    state.money -= offer.price;
     const inst = { id: offer.def.id };
     if (offer.params) inst.params = offer.params;
     if (offer.def.maxUses) inst.usesLeft = offer.def.maxUses;
 
-    if (offer.category === 'balls') state.ownedBalls.push(inst);
-    if (offer.category === 'gridMods') state.ownedGridMods.push(inst);
+    if (offer.category === 'balls')     state.ownedBalls.push(inst);
+    if (offer.category === 'gridMods')  state.ownedGridMods.push(inst);
     if (offer.category === 'wheelMods') {
       state.ownedWheelMods.push(inst);
       state.rebuildWheelLayout();

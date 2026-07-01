@@ -3,10 +3,6 @@ window.RS = window.RS || {};
 RS.CONFIG = {
   spinsPerRound: 3,
 
-  ballSlotsMax: 3,
-  gridModSlotsMax: 3,
-  wheelModSlotsMax: 3,
-
   shopOfferCounts: { balls: 2, gridMods: 2, wheelMods: 2 },
 
   startingChips: 150,
@@ -15,12 +11,17 @@ RS.CONFIG = {
     return Math.round(200 * Math.pow(1.45, round - 1));
   },
 
-  // $ earned when a round is cleared. Average shop item costs ~7$, so the base
-  // alone covers about 2 items per visit; the bonus is upside for beating the
-  // threshold by a wide margin.
+  // Shop item prices scale up each round so the economy stays relevant.
+  // base is the item's intrinsic price; round starts at 1.
+  shopItemPrice(base, round) {
+    return Math.round(base * Math.pow(1.1, round - 1));
+  },
+
+  // $ earned when a round is cleared. Scales with round so players can keep
+  // buying in late game, but prices scale too — net ~2 items per visit.
   moneyReward(round, finalChips, threshold) {
-    const base = 14 + Math.floor(round / 2);
-    const bonus = Math.floor(Math.max(0, finalChips - threshold) / 15);
+    const base = 10 + round * 2;
+    const bonus = Math.floor(Math.max(0, finalChips - threshold) / 20);
     return base + bonus;
   },
 
@@ -32,6 +33,6 @@ RS.CONFIG = {
     sixline: 5,
     dozen: 2,
     column: 2,
-    evenmoney: 1 // red/black, odd/even, low/high
+    evenmoney: 1
   }
 };

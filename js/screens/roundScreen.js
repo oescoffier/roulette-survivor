@@ -90,38 +90,37 @@ RS.ROUND_SCREEN = (function () {
     els.eventDesc.textContent = RS.EVENTS.getDescription(evt);
   }
 
+  function makeBadge(name, descFn) {
+    const b = document.createElement('span');
+    b.className = 'item-badge';
+    b.textContent = name;
+    RS.UI.TOOLTIP.attach(b, descFn);
+    return b;
+  }
+
   function renderActiveItems() {
     els.activeBalls.innerHTML = '';
     RS.state.ownedBalls.forEach((inst) => {
       const def = RS.BALLS.byId(inst.id);
       if (!def) return;
-      const b = document.createElement('span');
-      b.className = 'item-badge';
-      b.textContent = def.name + (inst.usesLeft !== undefined ? ` (${inst.usesLeft})` : '');
-      b.title = def.description;
-      els.activeBalls.appendChild(b);
+      const label = def.name + (inst.usesLeft !== undefined ? ` (${inst.usesLeft})` : '');
+      els.activeBalls.appendChild(makeBadge(label, () => def.description));
     });
 
     els.activeGridMods.innerHTML = '';
     RS.state.ownedGridMods.forEach((inst) => {
       const def = RS.GRID_MODS.byId(inst.id);
       if (!def) return;
-      const b = document.createElement('span');
-      b.className = 'item-badge';
-      b.textContent = def.name;
-      b.title = inst.params && def.formatDescription ? def.formatDescription(inst.params) : def.description;
-      els.activeGridMods.appendChild(b);
+      const desc = () => inst.params && def.formatDescription ? def.formatDescription(inst.params) : def.description;
+      els.activeGridMods.appendChild(makeBadge(def.name, desc));
     });
 
     els.activeWheelMods.innerHTML = '';
     RS.state.ownedWheelMods.forEach((inst) => {
       const def = RS.WHEEL_MODS.byId(inst.id);
       if (!def) return;
-      const b = document.createElement('span');
-      b.className = 'item-badge';
-      b.textContent = def.name;
-      b.title = inst.params && def.formatDescription ? def.formatDescription(inst.params) : def.description;
-      els.activeWheelMods.appendChild(b);
+      const desc = () => inst.params && def.formatDescription ? def.formatDescription(inst.params) : def.description;
+      els.activeWheelMods.appendChild(makeBadge(def.name, desc));
     });
   }
 

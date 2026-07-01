@@ -10,6 +10,7 @@ RS.debug = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  RS.UI.TOOLTIP.init();
   RS.MENU_SCREEN.init();
   RS.UI.showScreen('menu');
 });

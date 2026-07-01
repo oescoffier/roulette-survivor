@@ -8,14 +8,6 @@ RS.SHOP_SCREEN = (function () {
     offersEl.innerHTML = '';
 
     const offers = RS.SHOP.getOffers();
-    if (!offers.length) {
-      const p = document.createElement('p');
-      p.className = 'muted';
-      p.textContent = 'Aucune offre disponible (tous les emplacements sont pleins).';
-      offersEl.appendChild(p);
-      return;
-    }
-
     offers.forEach((offer) => {
       const card = document.createElement('div');
       card.className = 'shop-card';
@@ -35,16 +27,16 @@ RS.SHOP_SCREEN = (function () {
 
       const price = document.createElement('div');
       price.className = 'price';
-      price.textContent = `${offer.def.price}$`;
+      price.textContent = `${offer.price}$`;
       card.appendChild(price);
 
       const btn = document.createElement('button');
       btn.className = 'btn btn-small';
       btn.textContent = offer.sold ? 'ACHETÉ' : 'ACHETER';
-      btn.disabled = offer.sold || RS.state.money < offer.def.price;
+      btn.disabled = offer.sold || RS.state.money < offer.price;
       btn.addEventListener('click', () => {
         if (RS.SHOP.buy(RS.state, offer)) {
-          render();
+          render(); // re-render to update money display and sold state
         }
       });
       card.appendChild(btn);

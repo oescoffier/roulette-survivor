@@ -10,9 +10,56 @@ RS.UI = (function () {
     });
   }
 
+  // Compact number display: 1 234 → "1 234", 12 345 → "12.3K", etc.
   function fmt(n) {
-    return Math.round(n).toString();
+    n = Math.round(n);
+    if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'G';
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1e4) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+    return n.toString();
   }
 
-  return { showScreen, fmt };
+  // --- Tooltip system ---
+  // Usage: RS.UI.TOOLTIP.attach(element, () => 'text to show')
+  const TOOLTIP = (function () {
+    let el = null;
+
+    function init() {
+      el = document.createElement('div');
+      el.className = 'game-tooltip';
+      el.style.display = 'none';
+      document.body.appendChild(el);
+      document.addEventListener('mousemove', move);
+    }
+
+    function show(text) {
+      el.innerHTML = text;
+      el.style.display = '';
+    }
+
+    function hide() {
+      if (el) el.style.display = 'none';
+    }
+
+    function move(e) {
+      if (!el || el.style.display === 'none') return;
+      const pad = 14;
+      let x = e.clientX + pad;
+      let y = e.clientY - el.offsetHeight - pad;
+      if (x + el.offsetWidth > window.innerWidth - 8) x = e.clientX - el.offsetWidth - pad;
+      if (y < 8) y = e.clientY + pad;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+    }
+
+    // Attach hover tooltip to any element. getText() is called each time so it can be dynamic.
+    function attach(element, getText) {
+      element.addEventListener('mouseenter', () => show(getText()));
+      element.addEventListener('mouseleave', hide);
+    }
+
+    return { init, attach };
+  })();
+
+  return { showScreen, fmt, TOOLTIP };
 })();

@@ -124,13 +124,14 @@ RS.SPIN_RESOLVER = {
     });
     totalPayout += wheelBonus;
 
-    // --- Grid mod onZero hooks (primary ball pocket) ---
+    // --- Grid mod onZero hooks (primary ball pocket, capped at wagered to avoid overpay) ---
     let zeroBonus = 0;
     if (primaryPocket.number === 0 || primaryPocket.number === '00') {
       state.ownedGridMods.forEach((mod) => {
         const def = RS.GRID_MODS.byId(mod.id);
         if (def && def.onZero) zeroBonus += def.onZero(totalWagered, mod);
       });
+      if (totalWagered > 0) zeroBonus = Math.min(zeroBonus, totalWagered);
     }
     totalPayout += zeroBonus;
 
