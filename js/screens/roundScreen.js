@@ -24,11 +24,13 @@ RS.ROUND_SCREEN = (function () {
       log: document.getElementById('spin-log'),
       activeBalls: document.getElementById('active-balls'),
       activeGridMods: document.getElementById('active-grid-mods'),
-      activeWheelMods: document.getElementById('active-wheel-mods')
+      activeWheelMods: document.getElementById('active-wheel-mods'),
+      eventPanel: document.getElementById('round-event-panel'),
+      eventTag: document.getElementById('round-event-tag'),
+      eventDesc: document.getElementById('round-event-desc')
     };
   }
 
-  // Keeps the bet-size slider's range matched to the player's current chip count.
   function updateChipSlider() {
     const s = RS.state;
     const max = Math.max(1, Math.floor(s.chips));
@@ -51,6 +53,41 @@ RS.ROUND_SCREEN = (function () {
     const wagered = s.currentBets.reduce((sum, b) => sum + b.amount, 0);
     els.wagered.textContent = wagered;
     updateChipSlider();
+  }
+
+  // Animate the chip counter when chips change
+  function pulseChips(gained) {
+    const cl = els.chips.classList;
+    cl.remove('chip-pop-win', 'chip-pop-lose');
+    void els.chips.offsetWidth;
+    cl.add(gained > 0 ? 'chip-pop-win' : 'chip-pop-lose');
+  }
+
+  // Spawn a "+XXX" floating label above a bet zone
+  function spawnFloat(bet, payout) {
+    const targetEl = els.grid.querySelector(`[data-bet-key="${bet.key}"]`);
+    if (!targetEl) return;
+    const gRect = els.grid.getBoundingClientRect();
+    const tRect = targetEl.getBoundingClientRect();
+    const floater = document.createElement('div');
+    floater.className = 'float-win';
+    floater.textContent = `+${RS.UI.fmt(payout)}`;
+    floater.style.left = `${tRect.left - gRect.left + tRect.width / 2}px`;
+    floater.style.top = `${tRect.top - gRect.top - 4}px`;
+    els.grid.appendChild(floater);
+    setTimeout(() => floater.remove(), 1300);
+  }
+
+  function renderEvent() {
+    const evt = RS.state.currentEvent;
+    if (!evt) { els.eventPanel.style.display = 'none'; return; }
+    const def = RS.EVENTS.byId(evt.id);
+    if (!def) { els.eventPanel.style.display = 'none'; return; }
+    els.eventPanel.style.display = '';
+    els.eventPanel.className = 'round-event ' +
+      (def.positive === true ? 'positive' : def.positive === false ? 'negative' : 'neutral');
+    els.eventTag.textContent = def.name;
+    els.eventDesc.textContent = RS.EVENTS.getDescription(evt);
   }
 
   function renderActiveItems() {
@@ -148,15 +185,31 @@ RS.ROUND_SCREEN = (function () {
     const extraIndices = [];
     for (let i = 0; i < extraCount; i++) extraIndices.push(RS.WHEEL.spin(s.wheelLayout).index);
 
+    // Fog event: hide wheel until ball stops
+    const isFog = s.currentEvent && s.currentEvent.id === 'fog';
+    if (isFog) {
+      els.disc.classList.add('fogged');
+      els.ballsLayer.classList.add('fogged');
+      els.result.textContent = '?';
+      els.result.style.color = 'var(--muted)';
+    }
+
     RS.WHEEL.animateSpin(els.disc, els.ballsLayer, s.wheelLayout, primaryIndex, extraIndices, () => {
+      if (isFog) {
+        els.disc.classList.remove('fogged');
+        els.ballsLayer.classList.remove('fogged');
+        els.result.textContent = '';
+      }
       onSpinResolved(primaryIndex, extraIndices);
     });
   }
 
   function onSpinResolved(primaryIndex, extraIndices) {
     const s = RS.state;
+    const chipsBefore = s.chips;
     const result = RS.SPIN_RESOLVER.resolve(s, primaryIndex, extraIndices);
     const pocket = result.primaryPocket;
+    const chipsGained = s.chips - chipsBefore;
 
     els.result.textContent = pocket.number;
     els.result.style.color = pocket.color === 'red' ? 'var(--red)' : (pocket.color === 'green' ? 'var(--felt)' : '#fff');
@@ -169,13 +222,18 @@ RS.ROUND_SCREEN = (function () {
     result.betResults.forEach((br) => {
       if (br.win) {
         logLine(`Gagné — ${br.bet.label} : +${RS.UI.fmt(br.payout)} jetons`, 'win');
+        spawnFloat(br.bet, br.payout);
       } else {
         logLine(`Perdu — ${br.bet.label} (-${br.bet.amount})`, 'lose');
       }
     });
     if (result.wheelBonus) logLine(`Bonus roue : +${result.wheelBonus} jetons`, 'win');
+    if (result.zeroBonus) logLine(`Bouclier Zéro : +${result.zeroBonus} jetons récupérés`, 'win');
+    if (result.eventBonus) logLine(`Évènement — Zéro Béni : +${result.eventBonus} jetons !`, 'win');
     if (result.refund) logLine(`Bille fantôme : remboursement de ${result.refund} jetons`, 'win');
     result.removedBalls.forEach((name) => logLine(`${name} s'est brisée et a disparu.`, 'lose'));
+
+    if (chipsGained !== 0) pulseChips(chipsGained);
 
     renderActiveItems();
     updateTopbar();
@@ -234,6 +292,7 @@ RS.ROUND_SCREEN = (function () {
     resetSpinButton();
     setBettingEnabled(true);
 
+    renderEvent();
     renderActiveItems();
     updateTopbar();
   }

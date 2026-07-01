@@ -9,6 +9,7 @@ RS.state = {
   spinsRemaining: 3,
   money: 0,
   currentBets: [],
+  currentEvent: null,
   ownedBalls: [],
   ownedGridMods: [],
   ownedWheelMods: [],
@@ -24,21 +25,28 @@ RS.state = {
     this.ownedGridMods = [];
     this.ownedWheelMods = [];
     this.currentBets = [];
+    this.currentEvent = null;
     this.log = [];
     this.rebuildWheelLayout();
     this.startRound();
     this.save();
   },
 
-  // Resets per-round state (threshold, spins, bets, log). Chips are NOT reset
-  // here - they carry over from the previous round, so the player keeps
-  // whatever they scored above the threshold and builds on it round to round.
+  // Resets per-round state (threshold, spins, bets, log). Chips carry over.
+  // Also rolls a random event from round 2 onward and applies its setup effects.
   startRound() {
     this.threshold = RS.CONFIG.threshold(this.round);
     this.spinsRemaining = RS.CONFIG.spinsPerRound;
     this.currentBets = [];
     this.log = [];
     this.rebuildWheelLayout();
+
+    const evt = RS.EVENTS.rollEvent(this.round);
+    this.currentEvent = evt;
+    if (evt) {
+      const def = RS.EVENTS.byId(evt.id);
+      if (def && def.applyToRound) def.applyToRound(this);
+    }
   },
 
   nextRound() {
@@ -69,6 +77,7 @@ RS.state = {
       chips: this.chips,
       spinsRemaining: this.spinsRemaining,
       money: this.money,
+      currentEvent: this.currentEvent,
       ownedBalls: this.ownedBalls,
       ownedGridMods: this.ownedGridMods,
       ownedWheelMods: this.ownedWheelMods,

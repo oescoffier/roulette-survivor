@@ -3,7 +3,7 @@ window.RS = window.RS || {};
 // Wheel modifiers alter the physical wheel layout (37 pockets, rebuilt fresh from
 // the base layout then replayed through every owned mod in purchase order).
 // applyToLayout(layout, modInstance) must return a (possibly new) layout array.
-// onWin(pocket, modInstance) is an optional hook for effects that don't touch the layout.
+// onWin(pocket, modInstance) is an optional hook for flat chip bonuses.
 RS.WHEEL_MODS = (function () {
   function colorOf(n) { return RS.WHEEL.colorOf(n); }
 
@@ -69,6 +69,18 @@ RS.WHEEL_MODS = (function () {
       applyToLayout(layout) {
         if (layout.some((p) => p.number === '00')) return layout;
         return layout.concat([{ number: '00', color: 'green' }]);
+      }
+    },
+    {
+      id: 'hot_pocket',
+      name: 'Poche Brûlante',
+      description: 'Un numéro tiré au sort déclenche un bonus de +40 jetons à chaque fois qu\'il sort.',
+      price: 8,
+      paramsFactory() { return { number: Math.floor(Math.random() * 37) }; },
+      formatDescription(params) { return `Le ${params.number} sort → +40 jetons bonus.`; },
+      applyToLayout(layout) { return layout; },
+      onWin(pocket, mod) {
+        return String(pocket.number) === String(mod.params.number) ? 40 : 0;
       }
     }
   ];

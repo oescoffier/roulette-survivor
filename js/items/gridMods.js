@@ -1,7 +1,8 @@
 window.RS = window.RS || {};
 
 // Grid modifiers alter the betting grid's payout table.
-// modifyOdds(odds, bet, modInstance) returns the new odds for that bet type.
+// modifyOdds(odds, bet, modInstance) → new odds for that bet type.
+// onZero(totalWagered, modInstance) → bonus chips when ball lands on 0.
 RS.GRID_MODS = (function () {
   const list = [
     {
@@ -58,6 +59,26 @@ RS.GRID_MODS = (function () {
       modifyOdds(odds, bet) {
         if (bet.type === 'street') return odds + 3;
         if (bet.type === 'sixline') return odds + 3;
+        return odds;
+      }
+    },
+    {
+      id: 'zero_shield',
+      name: 'Bouclier Zéro',
+      description: 'Si la bille tombe sur le 0, récupérez 80% des jetons misés.',
+      price: 7,
+      onZero(totalWagered) {
+        return Math.round(totalWagered * 0.8);
+      }
+    },
+    {
+      id: 'corner_boost',
+      name: 'Maître des Coins',
+      description: 'Carrés paient 10:1 et sixains paient 7:1 au lieu de 8:1 et 5:1.',
+      price: 6,
+      modifyOdds(odds, bet) {
+        if (bet.type === 'corner') return 10;
+        if (bet.type === 'sixline') return 7;
         return odds;
       }
     }

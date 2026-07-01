@@ -2,11 +2,14 @@ window.RS = window.RS || {};
 
 // Balls are passive equipment (slots limited by RS.CONFIG.ballSlotsMax).
 // Each definition may expose:
-//   extraBalls: int - additional independent results rolled per "lancer"
-//   neighborSpread: bool - the result also activates the two adjacent wheel pockets
-//   flatBonusPerWin: int - flat chips added to every winning bet resolution
-//   maxUses: int - ball is consumed and removed after this many spins
-//   lossRefundPct: float - fraction of total wagered refunded if the spin wins nothing
+//   extraBalls:      int   - additional independent results rolled per "lancer"
+//   neighborSpread:  bool  - the result also activates the two adjacent wheel pockets (±1)
+//   wideSpread:      int   - activates N pockets on each side (±N) around landing
+//   ricochet:        bool  - also activates the pocket directly opposite on the wheel
+//   flatBonusPerWin: int   - flat chips added to every winning bet resolution
+//   maxUses:         int   - ball is consumed and removed after this many spins
+//   lossRefundPct:   float - fraction of total wagered refunded if the spin wins nothing
+//   payoutMultiplier:float - multiplies winnings (not stake) on every winning bet
 RS.BALLS = (function () {
   const list = [
     {
@@ -41,9 +44,31 @@ RS.BALLS = (function () {
     {
       id: 'ghost',
       name: 'Bille Fantôme',
-      description: "Si un lancer ne rapporte rien, 50% des jetons misés sont remboursés.",
+      description: 'Si un lancer ne rapporte rien, 50% des jetons misés sont remboursés.',
       price: 6,
       lossRefundPct: 0.5
+    },
+    {
+      id: 'pulsar',
+      name: 'Bille Pulsar',
+      description: 'Active les 4 cases voisines (±2) autour de la case touchée. Couvre 5 poches au total.',
+      price: 9,
+      wideSpread: 2
+    },
+    {
+      id: 'mirror',
+      name: 'Bille Miroir',
+      description: 'La bille rebondit sur la poche opposée de la roue — deux zones résolues en un lancer.',
+      price: 7,
+      ricochet: true
+    },
+    {
+      id: 'golden',
+      name: 'Bille Dorée',
+      description: '×2 sur les gains de chaque mise gagnante. Se brise après 2 lancers.',
+      price: 9,
+      payoutMultiplier: 2.0,
+      maxUses: 2
     }
   ];
 
