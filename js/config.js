@@ -9,10 +9,10 @@ RS.CONFIG = {
 
   shopOfferCounts: { balls: 2, gridMods: 2, wheelMods: 2 },
 
-  startingChips: 100,
+  startingChips: 150,
 
   threshold(round) {
-    return Math.round(300 * Math.pow(1.35, round - 1));
+    return Math.round(200 * Math.pow(1.45, round - 1));
   },
 
   // $ earned when a round is cleared. Average shop item costs ~7$, so the base
