@@ -16,7 +16,8 @@
     <section id="screen-menu" class="screen">
       <div class="panel hero-panel">
         <h1 class="title-xl">ROULETTE<br>SURVIVOR</h1>
-        <p class="muted">Mise tes jetons. Lance la bille. Survis aux manches.</p>
+        <p class="muted">Chaque manche : une caisse de départ, 3 lancers, un seuil à atteindre.<br>
+        Construis ton arsenal de billes, survis aux boss, encaisse les intérêts.</p>
         <div class="btn-row">
           <button id="btn-new-game" class="btn btn-accent">NOUVELLE PARTIE</button>
           <button id="btn-continue-game" class="btn" style="display:none">CONTINUER</button>
@@ -44,6 +45,10 @@
           <span id="stat-spins" class="stat-value">3</span>
         </div>
         <div class="stat">
+          <span class="stat-label">SÉRIE</span>
+          <span id="stat-streak" class="stat-value">—</span>
+        </div>
+        <div class="stat">
           <span class="stat-label">$</span>
           <span id="stat-money" class="stat-value money-value">0</span>
         </div>
@@ -58,6 +63,7 @@
         <div class="panel wheel-panel">
           <div id="wheel-wrap" class="wheel-wrap">
             <div id="wheel-disc" class="wheel-disc"></div>
+            <div class="wheel-hub"></div>
             <div id="wheel-balls-layer" class="wheel-balls-layer"></div>
             <div id="wheel-result" class="wheel-result"></div>
           </div>
@@ -91,12 +97,17 @@
     <section id="screen-shop" class="screen" style="display:none">
       <div class="panel topbar">
         <h2 class="title-lg">BOUTIQUE</h2>
+        <button id="btn-reroll-shop" class="btn btn-small">RELANCER</button>
         <div class="stat">
           <span class="stat-label">$</span>
           <span id="shop-money" class="stat-value money-value">0</span>
         </div>
       </div>
       <div id="shop-offers" class="shop-offers"></div>
+      <div id="shop-owned-section" class="panel shop-owned-panel" style="display:none">
+        <h3 class="title-lg owned-title">VOTRE COLLECTION <span class="muted owned-hint">— revendez à 50% du prix actuel</span></h3>
+        <div id="shop-owned" class="shop-owned-list"></div>
+      </div>
       <div class="btn-row">
         <button id="btn-leave-shop" class="btn btn-accent">MANCHE SUIVANTE</button>
       </div>

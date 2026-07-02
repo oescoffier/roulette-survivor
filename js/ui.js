@@ -61,5 +61,28 @@ RS.UI = (function () {
     return { init, attach };
   })();
 
-  return { showScreen, fmt, TOOLTIP };
+  // Full-screen announcement banner (round cleared, boss, game over).
+  // kind: '' | 'win' | 'lose' | 'boss'
+  function showBanner(title, subtitle, kind) {
+    const el = document.createElement('div');
+    el.className = 'wave-banner' + (kind ? ' ' + kind : '');
+
+    const t = document.createElement('div');
+    t.className = 'wave-title';
+    t.textContent = title;
+    el.appendChild(t);
+
+    if (subtitle) {
+      const s = document.createElement('div');
+      s.className = 'wave-sub';
+      s.textContent = subtitle;
+      el.appendChild(s);
+    }
+
+    document.body.appendChild(el);
+    setTimeout(() => el.classList.add('out'), 1500);
+    setTimeout(() => el.remove(), 2000);
+  }
+
+  return { showScreen, fmt, TOOLTIP, showBanner };
 })();

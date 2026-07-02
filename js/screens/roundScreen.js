@@ -10,6 +10,7 @@ RS.ROUND_SCREEN = (function () {
       threshold: document.getElementById('stat-threshold'),
       chips: document.getElementById('stat-chips'),
       spins: document.getElementById('stat-spins'),
+      streak: document.getElementById('stat-streak'),
       money: document.getElementById('stat-money'),
       wagered: document.getElementById('stat-wagered'),
       grid: document.getElementById('betting-grid'),
@@ -49,6 +50,13 @@ RS.ROUND_SCREEN = (function () {
     els.threshold.textContent = s.threshold;
     els.chips.textContent = RS.UI.fmt(s.chips);
     els.spins.textContent = s.spinsRemaining;
+    if (s.streak > 0) {
+      els.streak.textContent = `×${RS.CONFIG.streakMultiplier(s.streak).toFixed(1)}`;
+      els.streak.classList.add('streak-hot');
+    } else {
+      els.streak.textContent = '—';
+      els.streak.classList.remove('streak-hot');
+    }
     els.money.textContent = RS.UI.fmt(s.money);
     const wagered = s.currentBets.reduce((sum, b) => sum + b.amount, 0);
     els.wagered.textContent = wagered;
@@ -80,13 +88,13 @@ RS.ROUND_SCREEN = (function () {
 
   function renderEvent() {
     const evt = RS.state.currentEvent;
-    if (!evt) { els.eventPanel.style.display = 'none'; return; }
-    const def = RS.EVENTS.byId(evt.id);
+    const def = evt ? RS.EVENTS.byId(evt.id) : null;
+    document.getElementById('screen-round').classList.toggle('boss-round', !!(def && def.boss));
     if (!def) { els.eventPanel.style.display = 'none'; return; }
     els.eventPanel.style.display = '';
     els.eventPanel.className = 'round-event ' +
-      (def.positive === true ? 'positive' : def.positive === false ? 'negative' : 'neutral');
-    els.eventTag.textContent = def.name;
+      (def.boss ? 'boss' : def.positive === true ? 'positive' : def.positive === false ? 'negative' : 'neutral');
+    els.eventTag.textContent = (def.boss ? '☠ ' : '') + def.name;
     els.eventDesc.textContent = RS.EVENTS.getDescription(evt);
   }
 
@@ -184,8 +192,9 @@ RS.ROUND_SCREEN = (function () {
     // computed from primaryIndex, others are freshly rolled).
     const ownedBallIndices = RS.SPIN_RESOLVER.rollOwnedBallIndices(s, primaryIndex);
 
-    // Fog event: hide wheel until ball stops
-    const isFog = s.currentEvent && s.currentEvent.id === 'fog';
+    // Fog events (BROUILLARD, LA ROUE VOILÉE): hide wheel until ball stops
+    const evtDef = s.currentEvent ? RS.EVENTS.byId(s.currentEvent.id) : null;
+    const isFog = !!(evtDef && evtDef.fogged);
     if (isFog) {
       els.disc.classList.add('fogged');
       els.ballsLayer.classList.add('fogged');
@@ -231,6 +240,7 @@ RS.ROUND_SCREEN = (function () {
         logLine(`Perdu — ${br.bet.label} (-${br.bet.amount})`, 'lose');
       }
     });
+    if (result.streakBonus) logLine(`Série de gains : +${RS.UI.fmt(result.streakBonus)} jetons bonus !`, 'win');
     if (result.wheelBonus) logLine(`Bonus roue : +${result.wheelBonus} jetons`, 'win');
     if (result.zeroBonus) logLine(`Bouclier Zéro : +${result.zeroBonus} jetons récupérés`, 'win');
     if (result.eventBonus) logLine(`Évènement — Zéro Béni : +${result.eventBonus} jetons !`, 'win');
@@ -254,10 +264,22 @@ RS.ROUND_SCREEN = (function () {
 
   function endRound() {
     const s = RS.state;
+    const evtDef = s.currentEvent ? RS.EVENTS.byId(s.currentEvent.id) : null;
+
     if (s.chips >= s.threshold) {
-      const reward = RS.CONFIG.moneyReward(s.round, s.chips, s.threshold);
+      let reward = RS.CONFIG.moneyReward(s.round, s.chips, s.threshold);
+      if (evtDef && evtDef.boss) reward *= (evtDef.rewardMultiplier || 2);
       s.money += reward;
+      const interest = RS.CONFIG.interest(s.money);
+      s.money += interest;
+
       logLine(`Seuil atteint ! Manche réussie. +${reward}$`, 'win');
+      if (interest) logLine(`Intérêts (1$ par tranche de 10$) : +${interest}$`, 'win');
+
+      const title = evtDef && evtDef.boss ? 'BOSS VAINCU' : 'MANCHE RÉUSSIE';
+      const sub = `+${reward}$` + (interest ? ` · intérêts +${interest}$` : '');
+      RS.UI.showBanner(title, sub, evtDef && evtDef.boss ? 'boss' : 'win');
+
       s.pendingShop = true;
       s.save();
       els.btnSpin.textContent = 'ALLER À LA BOUTIQUE';
@@ -268,6 +290,7 @@ RS.ROUND_SCREEN = (function () {
       };
     } else {
       logLine('Seuil non atteint. Partie terminée.', 'lose');
+      RS.UI.showBanner('GAME OVER', `Manche ${s.round} — il manquait ${RS.UI.fmt(s.threshold - s.chips)} jetons`, 'lose');
       s.clearSave();
       els.btnSpin.textContent = 'GAME OVER';
       els.btnSpin.disabled = false;
@@ -299,6 +322,18 @@ RS.ROUND_SCREEN = (function () {
     renderEvent();
     renderActiveItems();
     updateTopbar();
+
+    const s = RS.state;
+    const atRoundStart = s.spinsRemaining >= RS.CONFIG.spinsPerRound;
+    if (atRoundStart) {
+      logLine(`Manche ${s.round} — caisse de départ : ${RS.UI.fmt(s.chips)} jetons, seuil : ${RS.UI.fmt(s.threshold)}.`, '');
+    }
+
+    // Boss round entrance announcement (only at the start of the round)
+    const evtDef = s.currentEvent ? RS.EVENTS.byId(s.currentEvent.id) : null;
+    if (evtDef && evtDef.boss && atRoundStart) {
+      RS.UI.showBanner('☠ ' + evtDef.name, RS.EVENTS.getDescription(s.currentEvent), 'boss');
+    }
   }
 
   return { enter };

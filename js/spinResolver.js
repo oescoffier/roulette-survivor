@@ -34,6 +34,9 @@ RS.SPIN_RESOLVER = {
     // One result entry per placed bet, payout accumulates across all balls.
     const betResults = state.currentBets.map((bet) => ({ bet, win: false, payout: 0 }));
 
+    const bossIron = state.currentEvent && state.currentEvent.id === 'boss_iron';
+    const EVEN_MONEY_TYPES = ['red', 'black', 'odd', 'even', 'low', 'high'];
+
     // Resolve one ball's landing against every placed bet.
     function applyBall(landingIndex, def) {
       const spread = def ? (def.spread || 0) : 0;
@@ -47,16 +50,19 @@ RS.SPIN_RESOLVER = {
       }
 
       betResults.forEach((br) => {
+        // MAIN DE FER boss: even-money bets never pay this round.
+        if (bossIron && EVEN_MONEY_TYPES.includes(br.bet.type)) return;
         let ballWon = false;
         let ballPay = 0;
         for (const hi of hitSet) {
           const res = RS.PAYOUTS.resolveBet(br.bet, layout[hi], state.ownedGridMods);
           if (res.win) {
             ballWon = true;
-            let p = res.payout;
-            if (multiplier !== 1) p = br.bet.amount + (p - br.bet.amount) * multiplier;
-            p += flatBonus;
-            ballPay += p;
+            // Each ball contributes its PROFIT only; the stake is returned
+            // once per winning bet (added after all balls are resolved).
+            let profit = (res.payout - br.bet.amount) * multiplier;
+            profit += flatBonus;
+            ballPay += profit;
           }
         }
         if (ballWon) {
@@ -75,6 +81,11 @@ RS.SPIN_RESOLVER = {
       return layout[landingIndex];
     });
 
+    // Return the stake once per winning bet (no matter how many balls hit it).
+    betResults.forEach((br) => {
+      if (br.win) br.payout += br.bet.amount;
+    });
+
     let totalPayout = betResults.reduce((s, br) => s + (br.win ? br.payout : 0), 0);
 
     // --- Event effects ---
@@ -90,6 +101,12 @@ RS.SPIN_RESOLVER = {
       if (evtDef.id === 'tax') {
         betResults.forEach((br) => {
           if (br.win) br.payout = Math.max(br.bet.amount, br.payout - 12);
+        });
+        totalPayout = betResults.reduce((s, br) => s + (br.win ? br.payout : 0), 0);
+      }
+      if (evtDef.id === 'boss_croupier') {
+        betResults.forEach((br) => {
+          if (br.win) br.payout = Math.max(0, br.payout - 25);
         });
         totalPayout = betResults.reduce((s, br) => s + (br.win ? br.payout : 0), 0);
       }
@@ -114,6 +131,16 @@ RS.SPIN_RESOLVER = {
           }
         });
       }
+    }
+
+    // --- Streak bonus: consecutive winning spins boost the profit portion ---
+    let streakBonus = 0;
+    const wonBefore = betResults.some((br) => br.win);
+    if (wonBefore && state.streak > 0) {
+      const mult = RS.CONFIG.streakMultiplier(state.streak);
+      const wageredWon = betResults.filter((br) => br.win).reduce((s, br) => s + br.bet.amount, 0);
+      streakBonus = Math.round(Math.max(0, totalPayout - wageredWon) * (mult - 1));
+      totalPayout += streakBonus;
     }
 
     // --- Wheel mod onWin hooks (primary ball pocket only) ---
@@ -154,6 +181,11 @@ RS.SPIN_RESOLVER = {
 
     state.chips = Math.round(state.chips + totalPayout + refund);
 
+    // Update the win streak (only spins with bets placed count).
+    if (totalWagered > 0) {
+      state.streak = anyBetWon ? state.streak + 1 : 0;
+    }
+
     // Consume maxUses balls
     const removedBalls = [];
     state.ownedBalls.forEach((inst) => {
@@ -174,7 +206,7 @@ RS.SPIN_RESOLVER = {
 
     return {
       primaryPocket, extraResults, betResults,
-      totalPayout, refund, wheelBonus, zeroBonus, eventBonus,
+      totalPayout, refund, wheelBonus, zeroBonus, eventBonus, streakBonus,
       removedBalls, totalWagered
     };
   }

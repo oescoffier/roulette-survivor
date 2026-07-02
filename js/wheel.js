@@ -44,7 +44,9 @@ RS.WHEEL = (function () {
       const to = ((i + 1) * seg).toFixed(3);
       return `${colorVar[p.color]} ${from}deg ${to}deg`;
     }).join(', ');
-    discEl.style.background = `conic-gradient(${stops})`;
+    // Thin separator lines between pockets layered over the color wheel.
+    const separators = `repeating-conic-gradient(rgba(244,244,244,.5) 0deg 0.4deg, transparent 0.4deg ${seg.toFixed(4)}deg)`;
+    discEl.style.background = `${separators}, conic-gradient(${stops})`;
 
     const R = discEl.clientWidth ? discEl.clientWidth / 2 : 220;
     layout.forEach((p, i) => {

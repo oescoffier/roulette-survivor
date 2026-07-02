@@ -8,6 +8,7 @@ RS.state = {
   chips: 0,
   spinsRemaining: 3,
   money: 0,
+  streak: 0,
   currentBets: [],
   currentEvent: null,
   ownedBalls: [],
@@ -20,7 +21,7 @@ RS.state = {
   newGame() {
     this.round = 1;
     this.money = 0;
-    this.chips = RS.CONFIG.startingChips;
+    this.streak = 0;
     this.ownedBalls = [];
     this.ownedGridMods = [];
     this.ownedWheelMods = [];
@@ -33,13 +34,17 @@ RS.state = {
   },
 
   // Resets per-round state (threshold, spins, bets, log). Chips carry over.
-  // Also rolls a random event from round 2 onward and applies its setup effects.
+  // Rolls a random event from round 2 onward (a boss every 5 rounds) and
+  // applies its setup effects BEFORE rebuilding the layout so events can
+  // temporarily alter the wheel (e.g. extra zeros).
   startRound() {
     this.threshold = RS.CONFIG.threshold(this.round);
+    // Fresh bankroll each round (computed from the BASE threshold, before any
+    // event/boss raises it — bosses genuinely demand more growth).
+    this.chips = Math.round(this.threshold * RS.CONFIG.bankrollRatio(this.round));
     this.spinsRemaining = RS.CONFIG.spinsPerRound;
     this.currentBets = [];
     this.log = [];
-    this.rebuildWheelLayout();
 
     const evt = RS.EVENTS.rollEvent(this.round);
     this.currentEvent = evt;
@@ -47,6 +52,7 @@ RS.state = {
       const def = RS.EVENTS.byId(evt.id);
       if (def && def.applyToRound) def.applyToRound(this);
     }
+    this.rebuildWheelLayout();
   },
 
   nextRound() {
@@ -62,6 +68,11 @@ RS.state = {
       const def = RS.WHEEL_MODS.byId(mod.id);
       if (def && def.applyToLayout) layout = def.applyToLayout(layout, mod);
     });
+    // Round-scoped layout changes from the current event (e.g. ZÉRO MAUDIT)
+    if (this.currentEvent) {
+      const def = RS.EVENTS.byId(this.currentEvent.id);
+      if (def && def.modifyLayout) layout = def.modifyLayout(layout);
+    }
     this.wheelLayout = layout;
   },
 
@@ -77,6 +88,7 @@ RS.state = {
       chips: this.chips,
       spinsRemaining: this.spinsRemaining,
       money: this.money,
+      streak: this.streak,
       currentEvent: this.currentEvent,
       ownedBalls: this.ownedBalls,
       ownedGridMods: this.ownedGridMods,

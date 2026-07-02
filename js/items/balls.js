@@ -1,8 +1,12 @@
 window.RS = window.RS || {};
 
 // Each ball bought is a physical ball launched into the wheel during a spin.
-// The player always has 1 primary ball (free). Every purchased ball adds a
-// second (or third…) ball that lands independently.
+// The player always has 1 primary ball (free, indestructible). Every purchased
+// ball adds a second (or third…) ball that lands independently.
+//
+// ALL purchased balls are consumable: maxUses = number of spins before the
+// ball shatters. Managing your arsenal (and the money to renew it) is the
+// core economy of a run.
 //
 // Per-ball properties:
 //   spread:          int  — also activates N pockets on each side of landing (0 = single pocket)
@@ -16,39 +20,44 @@ RS.BALLS = (function () {
     {
       id: 'twin',
       name: 'Bille Jumelle',
-      description: 'Lance une 2ème bille identique à la bille principale. Double vos chances.',
+      description: 'Lance une 2ème bille identique à la bille principale. Durée : 9 lancers.',
       price: 5,
-      spread: 0
+      spread: 0,
+      maxUses: 9
     },
     {
       id: 'neighbor',
       name: 'Bille Voisine',
-      description: 'Lance une bille qui active aussi les 2 cases voisines sur la roue (3 poches en tout).',
+      description: 'Lance une bille qui active aussi les 2 cases voisines sur la roue (3 poches en tout). Durée : 7 lancers.',
       price: 6,
-      spread: 1
+      spread: 1,
+      maxUses: 7
     },
     {
       id: 'pulsar',
       name: 'Bille Pulsar',
-      description: 'Lance une bille qui active les 4 cases voisines (±2) en plus de sa case d\'atterrissage.',
+      description: 'Lance une bille qui active les 4 cases voisines (±2) en plus de sa case d\'atterrissage. Durée : 5 lancers.',
       price: 9,
-      spread: 2
+      spread: 2,
+      maxUses: 5
     },
     {
       id: 'mirror',
       name: 'Bille Miroir',
-      description: 'Lance une bille qui atterrit toujours à l\'opposé de la bille principale sur la roue.',
+      description: 'Lance une bille qui atterrit toujours à l\'opposé de la bille principale sur la roue. Durée : 8 lancers.',
       price: 7,
       mirrorPrimary: true,
-      spread: 0
+      spread: 0,
+      maxUses: 8
     },
     {
       id: 'loaded',
       name: 'Bille Chargée',
-      description: 'Lance une bille qui ajoute +25 jetons à chaque mise gagnante qu\'elle touche.',
+      description: 'Lance une bille qui ajoute +25 jetons à chaque mise gagnante qu\'elle touche. Durée : 7 lancers.',
       price: 7,
       spread: 0,
-      flatBonusPerWin: 25
+      flatBonusPerWin: 25,
+      maxUses: 7
     },
     {
       id: 'worn',
@@ -62,10 +71,11 @@ RS.BALLS = (function () {
     {
       id: 'ghost',
       name: 'Bille Fantôme',
-      description: 'Lance une bille fantôme. Si aucune bille ne rapporte rien ce lancer, 50% des mises sont remboursées.',
+      description: 'Lance une bille fantôme. Si aucune bille ne rapporte rien ce lancer, 50% des mises sont remboursées. Durée : 8 lancers.',
       price: 6,
       spread: 0,
-      lossRefundPct: 0.5
+      lossRefundPct: 0.5,
+      maxUses: 8
     },
     {
       id: 'golden',

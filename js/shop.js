@@ -2,6 +2,10 @@ window.RS = window.RS || {};
 
 RS.SHOP = (function () {
   let currentOffers = [];
+  let rerollsUsed = 0;
+
+  const OWNED_ARRAYS = { balls: 'ownedBalls', gridMods: 'ownedGridMods', wheelMods: 'ownedWheelMods' };
+  const DEF_SOURCES = { balls: () => RS.BALLS, gridMods: () => RS.GRID_MODS, wheelMods: () => RS.WHEEL_MODS };
 
   function shuffle(arr) {
     const a = arr.slice();
@@ -36,6 +40,26 @@ RS.SHOP = (function () {
     return offers;
   }
 
+  // Called when the player enters the shop: resets per-visit reroll count.
+  function enterShop(state) {
+    rerollsUsed = 0;
+    return generateOffers(state);
+  }
+
+  function rerollCost(state) {
+    return RS.CONFIG.rerollCost(state.round, rerollsUsed);
+  }
+
+  function reroll(state) {
+    const cost = rerollCost(state);
+    if (state.money < cost) return false;
+    state.money -= cost;
+    rerollsUsed += 1;
+    generateOffers(state);
+    state.save();
+    return true;
+  }
+
   function descriptionFor(offer) {
     if (offer.params && offer.def.formatDescription) return offer.def.formatDescription(offer.params);
     return offer.def.description;
@@ -60,7 +84,37 @@ RS.SHOP = (function () {
     return true;
   }
 
+  // List every owned item with its sell value (half the current shop price).
+  function ownedItems(state) {
+    const items = [];
+    Object.keys(OWNED_ARRAYS).forEach((category) => {
+      const source = DEF_SOURCES[category]();
+      state[OWNED_ARRAYS[category]].forEach((inst, index) => {
+        const def = source.byId(inst.id);
+        if (!def) return;
+        items.push({
+          category, index, inst, def,
+          sellPrice: RS.CONFIG.sellPrice(def.price, state.round)
+        });
+      });
+    });
+    return items;
+  }
+
+  function sell(state, category, index) {
+    const arr = state[OWNED_ARRAYS[category]];
+    const inst = arr && arr[index];
+    if (!inst) return false;
+    const def = DEF_SOURCES[category]().byId(inst.id);
+    if (!def) return false;
+    arr.splice(index, 1);
+    state.money += RS.CONFIG.sellPrice(def.price, state.round);
+    if (category === 'wheelMods') state.rebuildWheelLayout();
+    state.save();
+    return true;
+  }
+
   function getOffers() { return currentOffers; }
 
-  return { generateOffers, getOffers, descriptionFor, buy };
+  return { generateOffers, enterShop, rerollCost, reroll, getOffers, descriptionFor, buy, ownedItems, sell };
 })();

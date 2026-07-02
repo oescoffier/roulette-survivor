@@ -48,6 +48,7 @@ body {
   letter-spacing: .04em;
   line-height: 1;
   margin: 0 0 .5rem;
+  text-shadow: 5px 5px 0 var(--accent);
 }
 
 .title-lg {
@@ -58,6 +59,14 @@ body {
 }
 
 .muted { color: var(--muted); }
+
+/* Screen entrance transition */
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.screen { animation: screenIn .3s ease; }
 
 .panel {
   border: 3px solid var(--line);
@@ -204,6 +213,22 @@ body {
   z-index: 4;
 }
 
+/* Static center hub: the result number displays inside it */
+.wheel-hub {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 132px;
+  height: 132px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid var(--line);
+  box-shadow: 0 0 0 6px var(--bg), inset 0 0 24px rgba(0,0,0,.6);
+  z-index: 2;
+  pointer-events: none;
+}
+
 .wheel-ball {
   position: absolute;
   border-radius: 50%;
@@ -224,6 +249,7 @@ body {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 2.6rem;
   pointer-events: none;
+  z-index: 5;
 }
 
 .chip-slider-wrap {
@@ -449,6 +475,26 @@ input[type="range"]::-moz-range-thumb {
 .round-event.negative .event-tag { color: var(--red); }
 .round-event.neutral   .event-tag { color: var(--muted); }
 
+/* Boss rounds: pulsing red event panel + red topbar accents */
+@keyframes bossPulse {
+  0%, 100% { box-shadow: 4px 4px 0 var(--red); }
+  50%      { box-shadow: 4px 4px 0 var(--red), 0 0 24px rgba(214,48,63,.5); }
+}
+
+.round-event.boss {
+  border-color: var(--red);
+  background: rgba(214,48,63,.14);
+  box-shadow: 4px 4px 0 var(--red);
+  animation: bossPulse 1.6s ease-in-out infinite;
+}
+
+.round-event.boss .event-tag { color: var(--red); font-size: 1.3rem; }
+
+.boss-round .topbar { border-color: var(--red); box-shadow: 6px 6px 0 var(--red); }
+
+/* Streak indicator glows gold when active */
+.stat-value.streak-hot { color: var(--gold); text-shadow: 0 0 12px rgba(240,210,75,.55); }
+
 .round-event .event-desc {
   font-size: .8rem;
   color: var(--text);
@@ -566,3 +612,100 @@ input[type="range"]::-moz-range-thumb {
   color: var(--gold);
   font-size: 1.2rem;
 }
+
+/* Owned collection in the shop (sell-back) */
+.shop-owned-panel .owned-title { margin: 0 0 .9rem; }
+.shop-owned-panel .owned-hint {
+  font-family: 'Space Mono', monospace;
+  font-size: .75rem;
+  letter-spacing: 0;
+}
+
+.shop-owned-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: .6rem;
+}
+
+.owned-item {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  border: 2px solid rgba(244,244,244,.22);
+  background: var(--surface-2);
+  padding: .45rem .7rem;
+}
+
+.owned-item .tag {
+  font-size: .6rem;
+  letter-spacing: .08em;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.owned-item .owned-name {
+  font-size: .8rem;
+  flex-grow: 1;
+  cursor: default;
+}
+
+.btn-sell {
+  box-shadow: 3px 3px 0 var(--gold);
+  flex-shrink: 0;
+}
+
+.btn-sell:hover {
+  background: var(--gold);
+  color: var(--bg);
+  box-shadow: 5px 5px 0 var(--gold);
+}
+
+/* Full-screen wave announcement banner */
+@keyframes bannerIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes bannerTitleIn {
+  from { transform: translateY(24px) scale(.94); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.wave-banner {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .8rem;
+  background: rgba(9,9,9,.82);
+  animation: bannerIn .25s ease;
+  pointer-events: none;
+  transition: opacity .45s ease;
+}
+
+.wave-banner.out { opacity: 0; }
+
+.wave-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(64px, 10vw, 112px);
+  letter-spacing: .04em;
+  line-height: 1;
+  color: var(--text);
+  text-shadow: 6px 6px 0 var(--accent);
+  animation: bannerTitleIn .35s ease;
+}
+
+.wave-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--gold);
+}
+
+.wave-banner.lose .wave-title { color: var(--red); text-shadow: 6px 6px 0 #000; }
+.wave-banner.lose .wave-sub   { color: var(--muted); }
+.wave-banner.boss .wave-title { text-shadow: 6px 6px 0 var(--red); }
